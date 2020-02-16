@@ -8,13 +8,16 @@ np.random.seed(0)
 boston = load_boston()
 x = boston['data']
 N = x.shape[0]
-x = np.concatenate((np.ones((506,1)),x),axis=1) #add constant one feature - no bias needed
+# add constant one feature - no bias needed
+x = np.concatenate((np.ones((506, 1)), x), axis=1)
 d = x.shape[1]
 y = boston['target']
 
 idx = np.random.permutation(range(N))
 
-#helper function
+# helper function
+
+
 def l2(A, B):
     '''
     Input: A is a Nxd matrix
@@ -22,12 +25,14 @@ def l2(A, B):
     Output: dist is a NxM matrix where dist[i,j] is the square norm between A[i,:] and B[j,:]
     i.e. dist[i,j] = ||A[i,:]-B[j,:]||^2
     '''
-    A_norm = (A**2).sum(axis=1).reshape(A.shape[0],1)
-    B_norm = (B**2).sum(axis=1).reshape(1,B.shape[0])
+    A_norm = (A**2).sum(axis=1).reshape(A.shape[0], 1)
+    B_norm = (B**2).sum(axis=1).reshape(1, B.shape[0])
     dist = A_norm+B_norm-2*A.dot(B.transpose())
     return dist
- 
-#to implement
+
+# to implement
+
+
 def LRLS(test_datum, x_train, y_train, tau, lam=1e-5):
     '''
     Given a test datum, it returns its prediction based on locally weighted regression
@@ -39,11 +44,13 @@ def LRLS(test_datum, x_train, y_train, tau, lam=1e-5):
            lam is the regularization parameter
     output is y_hat the prediction on test_datum
     '''
-    ## TODO
+    # TODO
     return None
-    ## TODO
+    # TODO
 
-#helper function
+# helper function
+
+
 def run_on_fold(x_test, y_test, x_train, y_train, taus):
     '''
     Input: x_test is the N_test x d design matrix
@@ -55,13 +62,15 @@ def run_on_fold(x_test, y_test, x_train, y_train, taus):
     '''
     N_test = x_test.shape[0]
     losses = np.zeros(taus.shape)
-    for j,tau in enumerate(taus):
-        predictions =  np.array([LRLS(x_test[i,:].reshape(d,1),x_train,y_train, tau) \
-                        for i in range(N_test)])
+    for j, tau in enumerate(taus):
+        predictions = np.array([LRLS(x_test[i, :].reshape(d, 1), x_train, y_train, tau)
+                                for i in range(N_test)])
         losses[j] = ((predictions.flatten()-y_test.flatten())**2).mean()
     return losses
 
-#to implement
+# to implement
+
+
 def run_k_fold(x, y, taus, k):
     '''
     Input: x is the N x d design matrix
@@ -70,15 +79,14 @@ def run_k_fold(x, y, taus, k):
            K in the number of folds
     output is losses a vector of k-fold cross validation losses one for each tau value
     '''
-    ## TODO
+    # TODO
     return None
-    ## TODO
+    # TODO
 
 
 if __name__ == "__main__":
     # In this exercise we fixed lambda (hard coded to 1e-5) and only set tau value. Feel free to play with lambda as well if you wish
-    taus = np.logspace(1.0,3,200)
-    losses = run_k_fold(x,y,taus,k=5)
+    taus = np.logspace(1.0, 3, 200)
+    losses = run_k_fold(x, y, taus, k=5)
     plt.plot(losses)
     print("min loss = {}".format(losses.min()))
-
