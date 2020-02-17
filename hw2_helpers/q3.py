@@ -105,30 +105,28 @@ def run_k_fold(x, y, taus, k):
     output is losses a vector of k-fold cross validation losses one for each tau value
     '''
     # TODO
-    x_parted = []
-    y_parted = []
-    part_len = len(x) / k
-    part_len = int(part_len)
-    cur = 0
-    for i in range(k):
-        x_parted.append(x[cur: cur+part_len])
-        y_parted.append(y[cur: cur+part_len])
-        cur += part_len
-
+    num = N//k
+    loss = np.zeros((k, taus.shape[0]))
     losses = []
     for i in range(k):
-        x_test = x_parted[i]
-        y_test = y_parted[i]
+        test = idx[i*num:(i+1)*num]
+        train = np.concatenate((idx[0:num*i], idx[num*(i+1):-1]))
+        print("test: ", test)
+        print("train: ", train)
+        x_test = []
+        y_test = []
         x_train = []
         y_train = []
-        for j in range(k):
-            if j != i:
-                x_train.extend(x_parted[j])
-                y_train.extend(y_parted[j])
-        # print("len(x_test)", len(x_test))
-        # print("len(y_test)", len(y_test))
-        # print("len(x_train)", len(x_train))
-        # print("len(y_train)", len(y_train))
+        for j in range(len(x)):
+            if j in test:
+                x_test.append(x[j])
+            if j in train:
+                x_train.append(x[j])
+        for k in range(len(y)):
+            if k in test:
+                y_test.append(y[k])
+            if k in train:
+                y_train.append(y[k])
 
         x_test = np.array(x_test)
         y_test = np.array(y_test)
@@ -138,6 +136,40 @@ def run_k_fold(x, y, taus, k):
         losses.append(run_on_fold(x_test, y_test, x_train, y_train, taus))
 
     return np.array(losses)
+
+    # x_parted = []
+    # y_parted = []
+    # part_len = len(x) / k
+    # part_len = int(part_len)
+    # cur = 0
+    # for i in range(k):
+    #     x_parted.append(x[cur: cur+part_len])
+    #     y_parted.append(y[cur: cur+part_len])
+    #     cur += part_len
+
+    # losses = []
+    # for i in range(k):
+    #     x_test = x_parted[i]
+    #     y_test = y_parted[i]
+    #     x_train = []
+    #     y_train = []
+    #     for j in range(k):
+    #         if j != i:
+    #             x_train.extend(x_parted[j])
+    #             y_train.extend(y_parted[j])
+    #     # print("len(x_test)", len(x_test))
+    #     # print("len(y_test)", len(y_test))
+    #     # print("len(x_train)", len(x_train))
+    #     # print("len(y_train)", len(y_train))
+
+    #     x_test = np.array(x_test)
+    #     y_test = np.array(y_test)
+    #     x_train = np.array(x_train)
+    #     y_train = np.array(y_train)
+
+    #     losses.append(run_on_fold(x_test, y_test, x_train, y_train, taus))
+
+    # return np.array(losses)
 
 
 if __name__ == "__main__":
