@@ -2,6 +2,8 @@ from __future__ import print_function
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.datasets import load_boston
+from scipy.special import logsumexp
+from math import exp
 np.random.seed(0)
 
 # load boston housing prices dataset
@@ -25,9 +27,12 @@ def l2(A, B):
     Output: dist is a NxM matrix where dist[i,j] is the square norm between A[i,:] and B[j,:]
     i.e. dist[i,j] = ||A[i,:]-B[j,:]||^2
     '''
+    # print(A.shape)
+    # print(B.shape)
     A_norm = (A**2).sum(axis=1).reshape(A.shape[0], 1)
     B_norm = (B**2).sum(axis=1).reshape(1, B.shape[0])
     dist = A_norm+B_norm-2*A.dot(B.transpose())
+    # print("dist: ", dist)
     return dist
 
 # to implement
@@ -45,8 +50,28 @@ def LRLS(test_datum, x_train, y_train, tau, lam=1e-5):
     output is y_hat the prediction on test_datum
     '''
     # TODO
-    return None
-    # TODO
+    dist = l2(np.array(x_train), test_datum.T)
+    x = -dist/(2*(tau**2))
+    diag_a = x - logsumexp(x)
+    a = np.exp(diag_a)
+    A = np.diag(a.flatten())
+    # print("dist: ", np.array(dist).shape)
+    # diag_a = []
+    # for i in range(len(x_train)):
+    #     log_a = dist[i] - logsumexp(dist)
+    #     diag_a.append(exp(log_a))
+    # A = np.diag(np.array(diag_a))
+
+    x_train = np.array(x_train)
+    xta = np.dot(x_train.T, A)
+    LSH = np.dot(xta, x_train)+lam*np.identity(d)
+    RHS = np.dot(xta, y_train)
+    w = np.linalg.solve(LSH, RHS)
+
+    y_hat = np.dot(w.T, test_datum)
+
+    return y_hat
+
 
 # helper function
 
@@ -54,7 +79,7 @@ def LRLS(test_datum, x_train, y_train, tau, lam=1e-5):
 def run_on_fold(x_test, y_test, x_train, y_train, taus):
     '''
     Input: x_test is the N_test x d design matrix
-           y_test is the N_test x 1 targets vector        
+           y_test is the N_test x 1 targets vector
            x_train is the N_train x d design matrix
            y_train is the N_train x 1 targets vector
            taus is a vector of tau values to evaluate
@@ -74,14 +99,45 @@ def run_on_fold(x_test, y_test, x_train, y_train, taus):
 def run_k_fold(x, y, taus, k):
     '''
     Input: x is the N x d design matrix
-           y is the N x 1 targets vector    
+           y is the N x 1 targets vector
            taus is a vector of tau values to evaluate
            K in the number of folds
     output is losses a vector of k-fold cross validation losses one for each tau value
     '''
     # TODO
-    return None
-    # TODO
+    x_parted = []
+    y_parted = []
+    part_len = len(x) / k
+    part_len = int(part_len)
+    cur = 0
+    for i in range(k):
+        x_parted.append(x[cur: cur+part_len])
+        y_parted.append(y[cur: cur+part_len])
+        cur += part_len
+
+    losses = []
+    for i in range(k):
+        x_test = x_parted[i]
+        y_test = y_parted[i]
+        x_train = []
+        y_train = []
+        for j in range(k):
+            if j != i:
+                x_train.extend(x_parted[j])
+                y_train.extend(y_parted[j])
+        # print("len(x_test)", len(x_test))
+        # print("len(y_test)", len(y_test))
+        # print("len(x_train)", len(x_train))
+        # print("len(y_train)", len(y_train))
+
+        x_test = np.array(x_test)
+        y_test = np.array(y_test)
+        x_train = np.array(x_train)
+        y_train = np.array(y_train)
+
+        losses.append(run_on_fold(x_test, y_test, x_train, y_train, taus))
+
+    return np.array(losses)
 
 
 if __name__ == "__main__":
